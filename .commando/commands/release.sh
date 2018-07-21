@@ -42,12 +42,12 @@ function command_release {
 
   # update version and tag
   self change_version "$version"
-  git commit -a -m "update version: $version"
+  git commit --all --message="update version: $version"
   git tag ${releaseTag}
 
   # update to next version
   self change_version "$nextVersion"
-  git commit -a -m "update version: $nextVersion"
+  git commit --all --message="update version: $nextVersion"
 
   # checkout release and sanity check
   git checkout ${releaseTag}
