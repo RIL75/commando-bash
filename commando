@@ -73,6 +73,23 @@ function self {
 # Main
 #
 
+function load {
+  local script="$1"
+  if [ -f "$script" ]; then
+    log "load: $script"
+    source "$script"
+  else
+    warn "Missing: $script"
+  fi
+}
+
+function require {
+  local script="$1"
+  log "require: $script"
+
+  # TODO: see what, if anything we can do here, marker impl mostly for DSL to declare a dependency
+}
+
 # display usage and exit
 function usage {
   set +o nounset
@@ -137,16 +154,14 @@ function main {
   local commands_dir=.${basename}/commands
   if [ -d "$commands_dir" ]; then
     for script in ${commands_dir}/*.sh; do
-      log "loading: $script"
-      source "$script"
+      load "$script"
     done
   fi
 
   # load project and user configuration
   for script in .${basename}/config.sh ${basename}.rc; do
     if [ -f "$script" ]; then
-      log "loading: $script"
-      source "$script"
+      load "$script"
     fi
   done
 

@@ -2,10 +2,9 @@
 #
 # Project commands
 #
-# Depends on:
-#   - help.sh
-#   - maven.sh
-#
+
+require help.sh
+require maven.sh
 
 # rebuild
 command_rebuild_description='Rebuild project'

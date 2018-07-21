@@ -2,12 +2,11 @@
 #
 # Release commands
 #
-# Depends on:
-#   - help.sh
-#   - git.sh
-#   - maven.sh
-#   - project.sh
-#
+
+require help.sh
+require git.sh
+require maven.sh
+require project.sh
 
 # release
 command_release_description='Release project'

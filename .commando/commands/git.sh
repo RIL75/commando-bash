@@ -3,7 +3,8 @@
 # Git support
 #
 
-git_executable='git'
+# default to 'git' on path
+git_executable=$(which git)
 git_options=''
 
 function git {

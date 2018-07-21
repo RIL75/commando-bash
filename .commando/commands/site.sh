@@ -2,9 +2,8 @@
 #
 # Site commands
 #
-# Depends on:
-#   - maven.sh
-#
+
+require maven.sh
 
 command_site_build_description='Build site'
 
