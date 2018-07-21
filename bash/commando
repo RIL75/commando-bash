@@ -1,0 +1,159 @@
+#!/bin/bash
+#
+# Project script.
+#
+# Reads configuration from a few locations:
+#
+# Commands - $basedir/.$basename/commands/*.sh
+# Project  - $basedir/.$basename/config.sh
+# User     - $basedir/$basename.rc
+#
+
+set -o errexit
+set -o nounset
+
+# resolve this script name; ie. 'project'
+basename=$(basename $0)
+
+# determine fully-qualified base directory
+basedir=$(dirname $0)
+basedir=$(cd "$basedir" && pwd)
+
+# if verbose log output is displayed; via -v option
+verbose=false
+
+# prefix for all command functions and command function attribute variables
+command_prefix='command_'
+
+# current command executing
+command=''
+
+#
+# Helpers
+#
+
+font_bold=$(tput bold)
+font_normal=$(tput sgr0)
+
+function BOLD {
+  printf "${font_bold}$*${font_normal}"
+}
+
+# display fatal message and exit
+function die {
+  printf "$(BOLD FATAL): $*\n" >&2
+  exit 1
+}
+
+# display error message
+function error {
+  printf "$(BOLD ERROR): $*\n" >&2
+}
+
+# display warning message
+function warn {
+  printf "$(BOLD WARN): $*\n"
+}
+
+# display verbose message if verbose enabled
+function log {
+  if ${verbose}; then
+    printf "$(BOLD VERBOSE): $*\n"
+  fi
+}
+
+function self {
+  log "running: $0 $*"
+  $0 "$@"
+}
+
+#
+# Main
+#
+
+# display usage and exit
+function usage {
+  set +o nounset
+  local message="$1"
+  set -o nounset
+
+  if [ -z "$message" ]; then
+    message="[options] <command> [command-options]
+
+options:
+  -h   show usage
+  -v   verbose output
+
+To see available commands:
+  $(BOLD ${basename} help)
+"
+  fi
+
+  printf "\nusage: $basename $message\n"
+  exit 2
+}
+
+# run a named command with optional arguments
+function run_command {
+  # not local; exposed as global
+  command="$(echo $1 | tr - _)" # adjust command to support "-" style commands
+  shift
+  log "command: $command"
+
+  # resolve command function
+  local fn="${command_prefix}$command"
+  if [ "$(type -t $fn)" = 'function' ]; then
+    log "command arguments: $*"
+    $fn "$@"
+  else
+    warn "Unknown command: $command"
+    usage
+  fi
+}
+
+# bootstrap
+function main {
+  cd "$basedir"
+
+  # process main options
+  while getopts "hv" opt; do
+    case "$opt" in
+      h)
+        usage
+        ;;
+      v)
+        verbose=true
+        shift
+        ;;
+    esac
+  done
+
+  log "Base directory: $basedir"
+  log "Arguments: $*"
+
+  # load command libraries
+  local commands_dir=.${basename}/commands
+  if [ -d "$commands_dir" ]; then
+    for script in ${commands_dir}/*.sh; do
+      log "loading: $script"
+      source "$script"
+    done
+  fi
+
+  # load project and user configuration
+  for script in .${basename}/config.sh ${basename}.rc; do
+    if [ -f "$script" ]; then
+      log "loading: $script"
+      source "$script"
+    fi
+  done
+
+  # display usage if no arguments, else execute command
+  if [ -z "$*" ]; then
+    usage
+  else
+    run_command "$@"
+  fi
+}
+
+main "$@"
