@@ -37,7 +37,7 @@ function command_release {
   log "Release tag: $releaseTag"
 
   # determine current branch
-  local branch=`git rev-parse --abbrev-ref HEAD`
+  local branch=$(git rev-parse --abbrev-ref HEAD)
   log "Current branch: $branch"
 
   # update version and tag
