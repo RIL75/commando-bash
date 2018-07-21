@@ -150,10 +150,10 @@ function main {
   log "Base directory: $basedir"
   log "Arguments: $*"
 
-  # load command libraries
-  local commands_dir=.${basename}/commands
-  if [ -d "$commands_dir" ]; then
-    for script in ${commands_dir}/*.sh; do
+  # load libraries
+  local library_dir=.${basename}/library
+  if [ -d "$library_dir" ]; then
+    for script in ${library_dir}/*.sh; do
       load "$script"
     done
   fi
