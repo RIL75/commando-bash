@@ -1,4 +1,4 @@
-# BASH
+# Commando - BASH
 
 Bourne Again Shell commando.
 
