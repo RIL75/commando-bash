@@ -1,7 +1,11 @@
-# Commando
+# BASH
 
-Various simple-ish command-line frameworks.
+Bourne Again Shell commando.
 
-## Implementations
+Useful to add configurable commands to a Unix-based project w/o too many dependencies on fancy languages. 
 
-* [Bourne Again Shell](bash) 
+## Features
+
+* Provides project configuration, user configuration overrides
+* Extensible commands
+* Command help system
