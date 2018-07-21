@@ -1,12 +1,14 @@
 #!/bin/bash
 #
-# Project script.
+# Commando script.
 #
 # Reads configuration from a few locations:
 #
 # Commands - $basedir/.$basename/commands/*.sh
 # Project  - $basedir/.$basename/config.sh
 # User     - $basedir/$basename.rc
+#
+# NOTE: $basename resolve to whatever the name of the commando script is.
 #
 
 set -o errexit
