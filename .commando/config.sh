@@ -1,3 +1,4 @@
+#@IgnoreInspection BashAddShebang
 #
 # Project configuration
 #
