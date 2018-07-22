@@ -4,6 +4,10 @@ Bourne Again Shell commando.
 
 Useful to add configurable commands to a Unix-based project w/o too many dependencies on fancy languages. 
 
+## Requires
+
+* Bash (version 4)
+
 ## Features
 
 * Provides project configuration, user configuration overrides
