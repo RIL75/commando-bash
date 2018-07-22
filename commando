@@ -125,7 +125,7 @@ To see available commands:
 # run a named command with optional arguments
 function run_command {
   # not local; exposed as global
-  command="$(echo $1 | tr - _)" # adjust command to support "-" style commands
+  command="${1//-/_}" # adjust command to support "-" style commands
   shift
   log "command: $command"
 

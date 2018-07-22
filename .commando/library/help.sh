@@ -21,7 +21,7 @@ function command_help {
 
 # display help for given command
 function help_command {
-  local command="$(echo $1 | tr - _)" # adjust command to support "-" style commands
+  local command="${1//-/_}" # adjust command to support "-" style commands
 
   # lookup command attributes
   set +o nounset
