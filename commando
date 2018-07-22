@@ -147,7 +147,7 @@ function main {
   # parse options and build command-line (command + command-options)
   local -a command_line
   for opt in "$@"; do
-    # if break token is found, add all remaining values to comamnd-line
+    # if break token is found, add all remaining values to command-line
     if [ "$opt" == '--' ]; then
       shift
       for extra in "$@"; do
@@ -178,6 +178,8 @@ function main {
   log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
   log "Base name: $basename"
   log "Base directory: $basedir"
+
+  # explain command-line
   if [ ${#command_line[@]} != 0 ]; then
     log "Command line (${#command_line[@]} arguments):"
     for i in ${!command_line[@]}; do
