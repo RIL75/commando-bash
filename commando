@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Commando script.
 #
@@ -73,11 +73,20 @@ function self {
 # Main
 #
 
+# compatibility check
+if [ "$BASH_VERSINFO" != "4" ]; then
+  die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
+fi
+
+declare -A loaded_modules
+
 function load {
   local script="$1"
   if [ -f "$script" ]; then
-    log "load: $script"
+    library_name="$(basename $script)"
+    log "load: $library_name -> $script"
     source "$script"
+    loaded_modules[$library_name]="$script"
   else
     warn "Missing: $script"
   fi
@@ -166,10 +175,11 @@ function main {
     esac
   done
 
+  log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
   log "Base name: $basename"
   log "Base directory: $basedir"
   if [ ${#command_line[@]} != 0 ]; then
-    log "${#command_line[@]} arguments:"
+    log "Command line (${#command_line[@]} arguments):"
     for i in ${!command_line[@]}; do
       log "  '${command_line[$i]}'"
     done
@@ -190,11 +200,13 @@ function main {
     fi
   done
 
+  log "Loaded modules: ${!loaded_modules[@]}"
+
   # display usage if no arguments, else execute command
   if [ ${#command_line[@]} == 0 ]; then
     usage
   else
-    run_command ${command_line}
+    run_command "${command_line[@]}"
   fi
 }
 
