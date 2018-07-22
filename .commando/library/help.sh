@@ -31,13 +31,12 @@ function help_command {
   eval help=\$${command_prefix}${command}_help
   set -o nounset
 
+  if [ -n "$description" ]; then
+    printf "\n$description\n"
+  fi
+
   printf "\n$(BOLD USAGE)\n\n"
   printf "  $basename $command $syntax\n\n"
-
-  if [ -n "$description" ]; then
-    printf "$(BOLD DESCRIPTION)\n\n"
-    printf "  $description\n\n"
-  fi
 
   if [ -n "$help" ]; then
     printf "$help\n"
