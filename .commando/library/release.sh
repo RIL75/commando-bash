@@ -10,24 +10,50 @@ require project.sh
 
 # release
 command_release_description='Release project'
-command_release_syntax='<version> <next-version>'
+command_release_syntax='<version> <next-version> [options]'
 command_release_help="\
+$(BOLD OPTIONS)
+  --dry-run   Do not push or deploy
+
 $(BOLD CONFIGURATION)
 
-  release_prebuild_options - Options for pre-release build
-  release_deploy_options   - Options for deploy build
+  release_prebuild_options  Options for pre-release build
+  release_deploy_options    Options for deploy build
 
 $(BOLD HOOKS)
 
-  release_prebuild - Hook called to perform pre-release build
-  release_deploy   - Hook called to perform deploy
+  release_prebuild  Hook called to perform pre-release build
+  release_deploy    Hook called to perform deploy
 "
 
 function command_release {
+  local dryrun='false'
+
+  local -a arguments
+  for opt in "$@"; do
+    case $opt in
+      --dry-run)
+        dryrun='true'
+        shift
+        ;;
+      -*)
+        die "Unknown option: $opt"
+        ;;
+      *)
+        arguments+=("$1")
+        shift
+        ;;
+    esac
+  done
+
   set +o nounset
-  local version="$1"
-  local nextVersion="$2"
+  local version="${arguments[0]}"
+  local nextVersion="${arguments[1]}"
   set -o nounset
+
+  log "Dry-run: $dryrun"
+  log "Version: $version"
+  log "Next-version: $nextVersion"
 
   if [ -z "$version" -o -z "$nextVersion" ]; then
     help_command_usage 'Missing required arguments'
@@ -53,11 +79,13 @@ function command_release {
   git checkout ${releaseTag}
   release_prebuild
 
-  # push branch and release-tag
-  git push origin ${branch} ${releaseTag}
+  if [ ${dryrun} != 'true' ]; then
+    # push branch and release-tag
+    git push origin ${branch} ${releaseTag}
 
-  # deploy release
-  release_deploy
+    # deploy release
+    release_deploy
+  fi
 
   # restore original branch
   git checkout ${branch}

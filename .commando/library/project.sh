@@ -21,8 +21,8 @@ command_change_version_syntax='<version>'
 command_change_version_help="\
 $(BOLD CONFIGURATION)
 
-  change_version_artifacts  - Initial set of projects to change
-  change_version_properties - Optional set of properties to change
+  change_version_artifacts    Initial set of projects to change
+  change_version_properties   Optional set of properties to change
 "
 
 change_version_artifacts=
@@ -50,13 +50,13 @@ command_license_headers_syntax='<check|format>'
 command_license_headers_help="\
 $(BOLD CONFIGURATION)
 
-  license_check_options  - Options for license check
-  license_format_options - Options for license format
+  license_check_options   Options for license check
+  license_format_options  Options for license format
 
 $(BOLD HOOKS)
 
-  license_check  - Hook called to perform license 'check'
-  license_format - Hook called to perform license 'format'
+  license_check   Hook called to perform license 'check'
+  license_format  Hook called to perform license 'format'
 "
 
 function command_license_headers {

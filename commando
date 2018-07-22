@@ -54,13 +54,13 @@ function error {
 
 # display warning message
 function warn {
-  printf "$(BOLD WARN): $*\n"
+  printf "$(BOLD WARN): $*\n" >&2
 }
 
 # display verbose message if verbose enabled
 function log {
   if ${verbose}; then
-    printf "$(BOLD VERBOSE): $*\n"
+    printf "$(BOLD VERBOSE): $*\n" >&2
   fi
 }
 
@@ -165,7 +165,7 @@ function main {
         verbose=true
         shift
         ;;
-      -*|--*)
+      -*)
         die "Unknown option: $opt"
         ;;
       *)
