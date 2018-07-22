@@ -100,8 +100,9 @@ function usage {
     message="[options] <command> [command-options]
 
 options:
-  -h   show usage
-  -v   verbose output
+  -h,--help       show usage
+  -v,--verbose    verbose output
+  --              stop processing options
 
 To see available commands:
   $(BOLD ${basename} help)
@@ -134,21 +135,45 @@ function run_command {
 function main {
   cd "$basedir"
 
-  # process main options
-  while getopts "hv" opt; do
-    case "$opt" in
-      h)
+  # parse options and build command-line (command + command-options)
+  local -a command_line
+  for opt in "$@"; do
+    # if break token is found, add all remaining values to comamnd-line
+    if [ "$opt" == '--' ]; then
+      shift
+      for extra in "$@"; do
+        command_line+=("$1")
+        shift
+      done
+      break
+    fi
+
+    case $opt in
+      -h|--help)
         usage
         ;;
-      v)
+      -v|--verbose)
         verbose=true
+        shift
+        ;;
+      -*|--*)
+        die "Unknown option: $opt"
+        ;;
+      *)
+        command_line+=("$1")
         shift
         ;;
     esac
   done
 
+  log "Base name: $basename"
   log "Base directory: $basedir"
-  log "Arguments: $*"
+  if [ ${#command_line[@]} != 0 ]; then
+    log "${#command_line[@]} arguments:"
+    for i in ${!command_line[@]}; do
+      log "  '${command_line[$i]}'"
+    done
+  fi
 
   # load libraries
   local library_dir=.${basename}/library
@@ -166,10 +191,10 @@ function main {
   done
 
   # display usage if no arguments, else execute command
-  if [ -z "$*" ]; then
+  if [ ${#command_line[@]} == 0 ]; then
     usage
   else
-    run_command "$@"
+    run_command ${command_line}
   fi
 }
 
