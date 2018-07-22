@@ -65,7 +65,7 @@ function log {
 }
 
 function self {
-  log "running: $0 $*"
+  log "Running: $0 $*"
   $0 "$@"
 }
 
@@ -74,7 +74,7 @@ function self {
 #
 
 # compatibility check
-if [ "$BASH_VERSINFO" != "4" ]; then
+if [ "$BASH_VERSINFO" != '4' ]; then
   die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
 fi
 
@@ -84,7 +84,7 @@ function load {
   local script="$1"
   if [ -f "$script" ]; then
     library_name="$(basename $script)"
-    log "load: $library_name -> $script"
+    log "Load: $library_name -> $script"
     source "$script"
     loaded_modules[$library_name]="$script"
   else
@@ -94,19 +94,33 @@ function load {
 
 function require {
   local script="$1"
-  log "require: $script"
+  log "Require: $script"
 
   # TODO: see what, if anything we can do here, marker impl mostly for DSL to declare a dependency
 }
 
+function load_modules {
+  # load libraries
+  local library_dir=.${basename}/library
+  if [ -d "$library_dir" ]; then
+    for script in ${library_dir}/*.sh; do
+      load "$script"
+    done
+  fi
+
+  # load project and user configuration
+  for script in .${basename}/config.sh ${basename}.rc; do
+    if [ -f "$script" ]; then
+      load "$script"
+    fi
+  done
+
+  log "Loaded modules: ${!loaded_modules[@]}"
+}
+
 # display usage and exit
 function usage {
-  set +o nounset
-  local message="$1"
-  set -o nounset
-
-  if [ -z "$message" ]; then
-    message="[options] <command> [command-options]
+  printf "\nusage: $basename [options] <command> [command-options]
 
 options:
   -h,--help       show usage
@@ -114,30 +128,50 @@ options:
   --              stop processing options
 
 To see available commands:
-  $(BOLD ${basename} help)
-"
+  $(BOLD ${basename} help)\n\n"
+
+  exit 2
+}
+
+function normalize_command_fn {
+  # supports commands with foo-bar and foo_bar style; later is canonical form
+  echo "${1//-/_}"
+}
+
+function resolve_command_fn {
+  local command="$(normalize_command_fn $1)"
+  set +o nounset
+  local resultvar="$2"
+  set -o nounset
+
+  log "Resolving command: $command"
+
+  local fn="${command_prefix}$command"
+  if [ "$(type -t $fn)" != 'function' ]; then
+    die "Unknown command: $command"
   fi
 
-  printf "\nusage: $basename $message\n"
-  exit 2
+  if [ -n "$resultvar" ]; then
+    eval $resultvar=$fn
+  fi
 }
 
 # run a named command with optional arguments
 function run_command {
   # not local; exposed as global
-  command="${1//-/_}" # adjust command to support "-" style commands
+  command="$(normalize_command_fn $1)"
   shift
-  log "command: $command"
 
-  # resolve command function
-  local fn="${command_prefix}$command"
-  if [ "$(type -t $fn)" = 'function' ]; then
-    log "command arguments: $*"
-    $fn "$@"
-  else
-    warn "Unknown command: $command"
-    usage
-  fi
+  log "Command: $command"
+  log "Command arguments (${#@})"
+  for arg in "${@}"; do
+    log "  $arg"
+  done
+
+  # resolve command function and run command
+  resolve_command_fn ${command} _command_fn
+  ${_command_fn} "$@"
+  unset _command_fn
 }
 
 # bootstrap
@@ -179,36 +213,28 @@ function main {
   log "Base name: $basename"
   log "Base directory: $basedir"
 
-  # explain command-line
+  set +o nounset
+  local have_command=false
   if [ ${#command_line[@]} != 0 ]; then
-    log "Command line (${#command_line[@]} arguments):"
-    for i in ${!command_line[@]}; do
-      log "  '${command_line[$i]}'"
+    have_command=true
+  fi
+  set -o nounset
+
+  # explain command-line
+  if ${have_command}; then
+    log "Command line (${#command_line[@]} arguments)"
+    for arg in ${!command_line[@]}; do
+      log "  '${command_line[$arg]}'"
     done
   fi
 
-  # load libraries
-  local library_dir=.${basename}/library
-  if [ -d "$library_dir" ]; then
-    for script in ${library_dir}/*.sh; do
-      load "$script"
-    done
-  fi
-
-  # load project and user configuration
-  for script in .${basename}/config.sh ${basename}.rc; do
-    if [ -f "$script" ]; then
-      load "$script"
-    fi
-  done
-
-  log "Loaded modules: ${!loaded_modules[@]}"
+  load_modules
 
   # display usage if no arguments, else execute command
-  if [ ${#command_line[@]} == 0 ]; then
-    usage
-  else
+  if ${have_command}; then
     run_command "${command_line[@]}"
+  else
+    usage
   fi
 }
 

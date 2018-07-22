@@ -12,6 +12,6 @@ fi
 maven_options=''
 
 function mvn {
-  log "running: $mvn_executable $maven_options $*"
+  log "Running: $mvn_executable $maven_options $*"
   "$mvn_executable" ${maven_options} "$@"
 }

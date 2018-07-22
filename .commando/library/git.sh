@@ -8,6 +8,6 @@ git_executable=$(which git)
 git_options=''
 
 function git {
-  log "running: $git_executable $git_options $*"
+  log "Running: $git_executable $git_options $*"
   "$git_executable" ${git_options} "$@"
 }

@@ -3,7 +3,6 @@
 # Release commands
 #
 
-require help.sh
 require git.sh
 require maven.sh
 require project.sh
@@ -56,7 +55,7 @@ function command_release {
   log "Next-version: $nextVersion"
 
   if [ -z "$version" -o -z "$nextVersion" ]; then
-    help_command_usage 'Missing required arguments'
+    die 'Missing required arguments'
   fi
 
   local releaseTag="release-$version"

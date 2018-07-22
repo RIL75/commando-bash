@@ -22,7 +22,10 @@ function command_help {
 
 # display help for given command
 function help_command {
-  local command="${1//-/_}" # adjust command to support "-" style commands
+  local command="$(normalize_command_fn $1)"
+
+  # ensure command exists
+  resolve_command_fn ${command}
 
   # lookup command attributes
   set +o nounset

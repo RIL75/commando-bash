@@ -3,7 +3,6 @@
 # Project commands
 #
 
-require help.sh
 require maven.sh
 
 # rebuild
@@ -21,7 +20,7 @@ command_change_version_syntax='<version>'
 command_change_version_help="\
 $(BOLD CONFIGURATION)
 
-  change_version_artifacts    Initial set of projects to change
+  change_version_artifacts    Initial list of project artifact-ids to change; $(BOLD REQUIRED)
   change_version_properties   Optional set of properties to change
 "
 
@@ -34,7 +33,7 @@ function command_change_version {
   set -o nounset
 
   if [ -z "$newVersion" ]; then
-    help_command_usage 'Missing required arguments'
+    die 'Missing required arguments'
   fi
 
   # see https://www.eclipse.org/tycho/sitedocs/tycho-release/tycho-versions-plugin/set-version-mojo.html
@@ -74,7 +73,7 @@ function command_license_headers {
       ;;
 
     *)
-      help_command_usage 'Missing or invalid mode'
+      die 'Missing or invalid mode'
       ;;
   esac
 }
