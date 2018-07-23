@@ -25,7 +25,7 @@ function __help_module {
 
   # display help for given command
   function help_command {
-    local command="$(normalize_command_fn $1)"
+    local command="$(normalize_command_name $1)"
 
     # ensure command exists
     resolve_command_fn ${command}
@@ -65,7 +65,7 @@ function __help_module {
     for command in ${commands}; do
       # lookup command description
       set +o nounset
-      eval description=\$${command_prefix}$(normalize_command_fn ${command})_description
+      eval description=\$${command_prefix}$(normalize_command_name ${command})_description
       set -o nounset
 
       # $(BOLD) helper messes up printf ability to format
