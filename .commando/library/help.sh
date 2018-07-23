@@ -4,10 +4,10 @@
 #
 
 function __help_module {
-  command_help_description='Display help for command or list commands'
-  command_help_syntax='[command]'
+  __help_command_description='Display help for command or list commands'
+  __help_command_syntax='[command]'
 
-  function command_help {
+  function __help_command {
     set +o nounset
     local command="$1"
     set -o nounset
@@ -21,7 +21,7 @@ function __help_module {
     fi
   }
 
-  define_command 'help' command_help
+  define_command 'help' __help_command
 
   # display help for given command
   function help_display_command_help {

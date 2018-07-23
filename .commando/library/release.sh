@@ -5,9 +5,9 @@
 
 function __release_module {
   # release
-  command_release_description='Release project'
-  command_release_syntax='<version> <next-version> [options]'
-  command_release_help='\
+  __release_command_description='Release project'
+  __release_command_syntax='<version> <next-version> [options]'
+  __release_command_help='\
 $(BOLD OPTIONS)
   --dry-run   Do not push or deploy
 
@@ -22,7 +22,7 @@ $(BOLD HOOKS)
   $(UL release_deploy)    Hook called to perform deploy
 '
 
-  function command_release {
+  function __release_command {
     local dryrun='false'
 
     local -a arguments
@@ -87,7 +87,7 @@ $(BOLD HOOKS)
     git checkout ${branch}
   }
 
-  define_command 'release' command_release
+  define_command 'release' __release_command
 
   release_prebuild_options='clean install --define test=skip'
 
