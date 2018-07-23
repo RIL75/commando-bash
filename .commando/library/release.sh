@@ -87,6 +87,8 @@ $(BOLD HOOKS)
     git checkout ${branch}
   }
 
+  define_command 'release' command_release
+
   release_prebuild_options='clean install --define test=skip'
 
   function release_prebuild {

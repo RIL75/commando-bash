@@ -126,6 +126,20 @@ function __command_system {
   # current command executing
   command=''
 
+  declare -gA defined_commands
+
+  function define_command {
+    local name=$1
+    local fn=$2
+    log "Define command: $name -> $fn"
+
+    if [ "$(type -t $fn)" != 'function' ]; then
+      die "Invalid command: $name -> $fn"
+    fi
+
+    defined_commands[$name]="$fn"
+  }
+
   function normalize_command_fn {
     # supports commands with foo-bar and foo_bar style; later is canonical form
     echo "${1//-/_}"
@@ -141,10 +155,7 @@ function __command_system {
 
     log "Resolving command: $command"
 
-    local fn="${command_prefix}$command"
-    if [ "$(type -t $fn)" != 'function' ]; then
-      die "Unknown command: $command"
-    fi
+    local fn="${defined_commands[$command]}"
 
     # if given, store result as given variable
     if [ -n "$resultvar" ]; then

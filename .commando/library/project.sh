@@ -13,6 +13,8 @@ function __project_module {
     mvn ${rebuild_options} $*
   }
 
+  define_command 'rebuild' command_rebuild
+
   # change_version
   command_change_version_description='Change project version'
   command_change_version_syntax='<version>'
@@ -57,6 +59,8 @@ $(BOLD HOOKS)
   $(UL license_format)  Hook called to perform license 'format'
 '
 
+  define_command 'change-version' command_change_version
+
   function command_license_headers {
     set +o nounset
     local mode="$1"
@@ -76,6 +80,8 @@ $(BOLD HOOKS)
         ;;
     esac
   }
+
+  define_command 'license-headers' command_license_headers
 
   license_check_options='--activate-profiles license-check --non-recursive'
 

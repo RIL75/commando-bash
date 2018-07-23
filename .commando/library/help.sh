@@ -21,6 +21,8 @@ function __help_module {
     fi
   }
 
+  define_command 'help' command_help
+
   # display help for given command
   function help_command {
     local command="$(normalize_command_fn $1)"
@@ -49,45 +51,28 @@ function __help_module {
     fi
   }
 
-  # display help for _current_ command; optionally display a warning message and exit
-  function help_command_usage {
-    set +o nounset
-    local message="$1"
-    set -o nounset
-
-    if [ -n "$message" ]; then
-      warn ${message}
-    fi
-
-    help_command ${command}
-    exit 2
-  }
-
   # display list of all commands
   function help_list_commands {
-    local functions=$(compgen -A function)
-
     # discover all command functions
-    local commands=$(echo ${functions} | tr ' ' '\n' | grep ^${command_prefix} | sort)
+    local commands=${!defined_commands[@]}
 
     # calculate max size of function, and adjust for display
-    local prefix_size=$(expr length ${command_prefix})
-    local max_size=$(echo "$commands" | wc --max-line-length)
+    local names=$(echo ${commands} | tr ' ' '\n' | sort)
+    local max_size=$(echo "$names" | wc --max-line-length)
     local col_size=$(expr ${max_size} + 4)
 
     printf '\nCommands:\n'
-    for fn in ${commands}; do
-      local command="${fn:$prefix_size}"
-
+    for command in ${commands}; do
       # lookup command description
       set +o nounset
-      eval description=\$${command_prefix}${command}_description
+      eval description=\$${command_prefix}$(normalize_command_fn ${command})_description
       set -o nounset
 
+      # $(BOLD) helper messes up printf ability to format
       if [ -n "$description" ]; then
-        printf "  %-${col_size}s - %s\n" "$(BOLD ${command})" "$description"
+        printf "  ${font_bold}%-${col_size}s${font_normal} %s\n" "${command}" "$description"
       else
-        printf "  %s\n" "$(BOLD ${command})"
+        printf "  ${font_bold}${command}${font_normal}\n"
       fi
     done
     printf '\n'
