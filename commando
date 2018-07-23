@@ -173,13 +173,13 @@ function __main {
   function usage {
     printf "\nusage: $basename [options] <command> [command-options]
 
-  options:
-    -h,--help       show usage
-    -v,--verbose    verbose output
-    --              stop processing options
+options:
+  -h,--help       show usage
+  -v,--verbose    verbose output
+  --              stop processing options
 
-  To see available commands:
-    $(BOLD ${basename} help)\n\n"
+To see available commands:
+  $(BOLD ${basename} help)\n\n"
 
     exit 2
   }
