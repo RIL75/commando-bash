@@ -14,4 +14,6 @@ function __git_module {
   }
 }
 
+require_module util.sh
+
 define_module __git_module "$@"

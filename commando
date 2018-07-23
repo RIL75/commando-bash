@@ -172,32 +172,6 @@ function __command_system {
 }
 
 #
-# Helpers
-#
-
-function __command_helpers {
-  # resolve an executable
-  function resolve_executable {
-    local name="$1"
-    local executable="$2"
-    local resultvar="$3"
-
-    if [ ! -x "$executable" ]; then
-      set +o errexit
-      executable=$(which ${name})
-      set -o errexit
-
-      if [ -x "$executable" ]; then
-        log "Resolved executable: $name -> $executable"
-        eval $resultvar="$executable"
-      else
-        die "Unable to resolve executable: $name"
-      fi
-    fi
-  }
-}
-
-#
 # Main
 #
 
@@ -232,7 +206,6 @@ To see available commands:
   cd "$basedir"
   __module_system
   __command_system
-  __command_helpers
 
   # parse options and build command-line (command + command-options)
   local -a command_line

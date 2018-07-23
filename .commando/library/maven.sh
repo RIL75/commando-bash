@@ -14,4 +14,6 @@ function __maven_module {
   }
 }
 
+require_module util.sh
+
 define_module __maven_module "$@"
