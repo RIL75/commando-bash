@@ -14,251 +14,255 @@
 set -o errexit
 set -o nounset
 
-# resolve this script name; ie. 'commando'
-basename=$(basename $0)
+function __main {
+  # resolve this script name; ie. 'commando'
+  basename=$(basename $0)
 
-# determine fully-qualified base directory
-basedir=$(dirname $0)
-basedir=$(cd "$basedir" && pwd)
+  # determine fully-qualified base directory
+  basedir=$(dirname $0)
+  basedir=$(cd "$basedir" && pwd)
 
-# if verbose log output is displayed; via -v option
-verbose='false'
+  # if verbose log output is displayed; via -v option
+  verbose='false'
 
-# prefix for all command functions and command function attribute variables
-command_prefix='command_'
+  # prefix for all command functions and command function attribute variables
+  command_prefix='command_'
 
-# current command executing
-command=''
+  # current command executing
+  command=''
 
-#
-# Helpers
-#
+  #
+  # Helpers
+  #
 
-font_bold=''
-font_normal=''
-font_underline=''
-font_standout=''
-if [ -t 1 ]; then
-  ncolors=$(tput colors)
-  if [ -n "$ncolors" -a "$ncolors" -ge 8 ]; then
-    font_normal=$(tput sgr0)
-    font_bold=$(tput bold)
-    font_underline=$(tput smul)
-    font_standout=$(tput smso)
-  fi
-fi
-
-function BOLD {
-  printf "${font_bold}$*${font_normal}"
-}
-
-function UL {
-  printf "${font_underline}$*${font_normal}"
-}
-
-# display fatal message and exit
-function die {
-  printf "$(BOLD FATAL): $*\n" >&2
-  exit 1
-}
-
-# display error message
-function error {
-  printf "$(BOLD ERROR): $*\n" >&2
-}
-
-# display warning message
-function warn {
-  printf "$(BOLD WARN): $*\n" >&2
-}
-
-# display verbose message if verbose enabled
-function log {
-  if [ ${verbose} = 'true' ]; then
-    printf "$(BOLD VERBOSE): $*\n" >&2
-  fi
-}
-
-function self {
-  log "Running: $0 $*"
-  $0 "$@"
-}
-
-#
-# Main
-#
-
-# compatibility check
-if [ "$BASH_VERSINFO" != '4' ]; then
-  die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
-fi
-
-declare -A loaded_modules
-
-function load {
-  local script="$1"
-  if [ -f "$script" ]; then
-    library_name="$(basename $script)"
-    log "Load: $library_name -> $script"
-    source "$script"
-    loaded_modules[$library_name]="$script"
-  else
-    warn "Missing: $script"
-  fi
-}
-
-function require {
-  local script="$1"
-  log "Require: $script"
-
-  # TODO: see what, if anything we can do here, marker impl mostly for DSL to declare a dependency
-}
-
-function load_modules {
-  # load libraries
-  local library_dir=.${basename}/library
-  if [ -d "$library_dir" ]; then
-    for script in ${library_dir}/*.sh; do
-      load "$script"
-    done
+  font_bold=''
+  font_normal=''
+  font_underline=''
+  font_standout=''
+  if [ -t 1 ]; then
+    local ncolors=$(tput colors)
+    if [ -n "$ncolors" -a "$ncolors" -ge 8 ]; then
+      font_normal=$(tput sgr0)
+      font_bold=$(tput bold)
+      font_underline=$(tput smul)
+      font_standout=$(tput smso)
+    fi
   fi
 
-  # load project and user configuration
-  for script in .${basename}/config.sh ${basename}.rc; do
+  function BOLD {
+    printf "${font_bold}$*${font_normal}"
+  }
+
+  function UL {
+    printf "${font_underline}$*${font_normal}"
+  }
+
+  # display fatal message and exit
+  function die {
+    printf "$(BOLD FATAL): $*\n" >&2
+    exit 1
+  }
+
+  # display error message
+  function error {
+    printf "$(BOLD ERROR): $*\n" >&2
+  }
+
+  # display warning message
+  function warn {
+    printf "$(BOLD WARN): $*\n" >&2
+  }
+
+  # display verbose message if verbose enabled
+  function log {
+    if [ ${verbose} = 'true' ]; then
+      printf "$(BOLD VERBOSE): $*\n" >&2
+    fi
+  }
+
+  function self {
+    log "Running: $0 $*"
+    $0 "$@"
+  }
+
+  #
+  # Main
+  #
+
+  # compatibility check
+  if [ "$BASH_VERSINFO" != '4' ]; then
+    die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
+  fi
+
+  declare -A loaded_modules
+
+  function load {
+    local script="$1"
     if [ -f "$script" ]; then
-      load "$script"
+      library_name="$(basename $script)"
+      log "Load: $library_name -> $script"
+      source "$script"
+      loaded_modules[$library_name]="$script"
+    else
+      warn "Missing: $script"
     fi
-  done
+  }
 
-  log "Loaded modules: ${!loaded_modules[@]}"
-}
+  function require {
+    local script="$1"
+    log "Require: $script"
 
-# display usage and exit
-function usage {
-  printf "\nusage: $basename [options] <command> [command-options]
+    # TODO: see what, if anything we can do here, marker impl mostly for DSL to declare a dependency
+  }
 
-options:
-  -h,--help       show usage
-  -v,--verbose    verbose output
-  --              stop processing options
+  function load_modules {
+    # load libraries
+    local library_dir=.${basename}/library
+    if [ -d "$library_dir" ]; then
+      for script in ${library_dir}/*.sh; do
+        load "$script"
+      done
+    fi
 
-To see available commands:
-  $(BOLD ${basename} help)\n\n"
-
-  exit 2
-}
-
-function normalize_command_fn {
-  # supports commands with foo-bar and foo_bar style; later is canonical form
-  echo "${1//-/_}"
-}
-
-function resolve_command_fn {
-  local command="$(normalize_command_fn $1)"
-
-  # optional variable name to store result into
-  set +o nounset
-  local resultvar="$2"
-  set -o nounset
-
-  log "Resolving command: $command"
-
-  local fn="${command_prefix}$command"
-  if [ "$(type -t $fn)" != 'function' ]; then
-    die "Unknown command: $command"
-  fi
-
-  # if given, store result as given variable
-  if [ -n "$resultvar" ]; then
-    eval $resultvar=$fn
-  fi
-}
-
-# run a named command with optional arguments
-function run_command {
-  # not local; exposed as global
-  command="$(normalize_command_fn $1)"
-  shift
-
-  if ${verbose}; then
-    log "Command: $command"
-    log "Command arguments (${#@})"
-    for arg in "${@}"; do
-      log "  $arg"
+    # load project and user configuration
+    for script in .${basename}/config.sh ${basename}.rc; do
+      if [ -f "$script" ]; then
+        load "$script"
+      fi
     done
-  fi
 
-  # resolve command function and run command
-  resolve_command_fn ${command} _command_fn
-  ${_command_fn} "$@"
-  unset _command_fn
-}
+    log "Loaded modules: ${!loaded_modules[@]}"
+  }
 
-# bootstrap
-function main {
-  cd "$basedir"
+  # display usage and exit
+  function usage {
+    printf "\nusage: $basename [options] <command> [command-options]
 
-  # parse options and build command-line (command + command-options)
-  local -a command_line
-  for opt in "$@"; do
-    # if break token is found, add all remaining values to command-line
-    if [ "$opt" == '--' ]; then
-      shift
-      for extra in "$@"; do
-        command_line+=("$1")
-        shift
-      done
-      break
+  options:
+    -h,--help       show usage
+    -v,--verbose    verbose output
+    --              stop processing options
+
+  To see available commands:
+    $(BOLD ${basename} help)\n\n"
+
+    exit 2
+  }
+
+  function normalize_command_fn {
+    # supports commands with foo-bar and foo_bar style; later is canonical form
+    echo "${1//-/_}"
+  }
+
+  function resolve_command_fn {
+    local command="$(normalize_command_fn $1)"
+
+    # optional variable name to store result into
+    set +o nounset
+    local resultvar="$2"
+    set -o nounset
+
+    log "Resolving command: $command"
+
+    local fn="${command_prefix}$command"
+    if [ "$(type -t $fn)" != 'function' ]; then
+      die "Unknown command: $command"
     fi
 
-    case $opt in
-      -h|--help)
-        usage
-        ;;
-      -v|--verbose)
-        verbose=true
+    # if given, store result as given variable
+    if [ -n "$resultvar" ]; then
+      eval $resultvar=$fn
+    fi
+  }
+
+  # run a named command with optional arguments
+  function run_command {
+    # not local; exposed as global
+    command="$(normalize_command_fn $1)"
+    shift
+
+    if ${verbose}; then
+      log "Command: $command"
+      log "Command arguments (${#@})"
+      for arg in "${@}"; do
+        log "  $arg"
+      done
+    fi
+
+    # resolve command function and run command
+    resolve_command_fn ${command} _command_fn
+    ${_command_fn} "$@"
+    unset _command_fn
+  }
+
+  # bootstrap
+  function main {
+    cd "$basedir"
+
+    # parse options and build command-line (command + command-options)
+    local -a command_line
+    for opt in "$@"; do
+      # if break token is found, add all remaining values to command-line
+      if [ "$opt" == '--' ]; then
         shift
-        ;;
-      -*)
-        die "Unknown option: $opt"
-        ;;
-      *)
-        command_line+=("$1")
-        shift
-        ;;
-    esac
-  done
+        for extra in "$@"; do
+          command_line+=("$1")
+          shift
+        done
+        break
+      fi
 
-  # check if we have a command-line or not
-  set +o nounset
-  local have_command=false
-  if [ ${#command_line[@]} != 0 ]; then
-    have_command=true
-  fi
-  set -o nounset
+      case $opt in
+        -h|--help)
+          usage
+          ;;
+        -v|--verbose)
+          verbose=true
+          shift
+          ;;
+        -*)
+          die "Unknown option: $opt"
+          ;;
+        *)
+          command_line+=("$1")
+          shift
+          ;;
+      esac
+    done
 
-  if ${verbose}; then
-    log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
-    log "Base name: $basename"
-    log "Base directory: $basedir"
+    # check if we have a command-line or not
+    set +o nounset
+    local have_command=false
+    if [ ${#command_line[@]} != 0 ]; then
+      have_command=true
+    fi
+    set -o nounset
 
-    # explain command-line
+    if ${verbose}; then
+      log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
+      log "Base name: $basename"
+      log "Base directory: $basedir"
+
+      # explain command-line
+      if ${have_command}; then
+        log "Command line (${#command_line[@]} arguments)"
+        for arg in ${!command_line[@]}; do
+          log "  '${command_line[$arg]}'"
+        done
+      fi
+    fi
+
+    load_modules
+
+    # display usage if no arguments, else execute command
     if ${have_command}; then
-      log "Command line (${#command_line[@]} arguments)"
-      for arg in ${!command_line[@]}; do
-        log "  '${command_line[$arg]}'"
-      done
+      run_command "${command_line[@]}"
+    else
+      usage
     fi
-  fi
+  }
 
-  load_modules
-
-  # display usage if no arguments, else execute command
-  if ${have_command}; then
-    run_command "${command_line[@]}"
-  else
-    usage
-  fi
+  main "$@"
 }
 
-main "$@"
+__main "$@"
