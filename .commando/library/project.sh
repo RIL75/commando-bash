@@ -4,7 +4,7 @@
 #
 
 function __project_module {
-  require maven.sh
+  require_module maven.sh
 
   # rebuild
   command_rebuild_description='Rebuild project'

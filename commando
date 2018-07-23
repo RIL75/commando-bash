@@ -65,7 +65,7 @@ function __output_helpers {
 function __module_system {
   declare -gA loaded_modules
 
-  function load {
+  function load_module {
     local script="$1"
     if [ -f "$script" ]; then
       library_name="$(basename $script)"
@@ -77,11 +77,9 @@ function __module_system {
     fi
   }
 
-  function require {
+  function require_module {
     local script="$1"
     log "Require: $script"
-
-    # TODO: see what, if anything we can do here, marker impl mostly for DSL to declare a dependency
   }
 
   function load_modules {
@@ -89,14 +87,14 @@ function __module_system {
     local library_dir=.${basename}/library
     if [ -d "$library_dir" ]; then
       for script in ${library_dir}/*.sh; do
-        load "$script"
+        load_module "$script"
       done
     fi
 
     # load project and user configuration
     for script in .${basename}/config.sh ${basename}.rc; do
       if [ -f "$script" ]; then
-        load "$script"
+        load_module "$script"
       fi
     done
 

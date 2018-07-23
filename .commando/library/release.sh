@@ -4,9 +4,9 @@
 #
 
 function __release_module {
-  require git.sh
-  require maven.sh
-  require project.sh
+  require_module git.sh
+  require_module maven.sh
+  require_module project.sh
 
   # release
   command_release_description='Release project'
