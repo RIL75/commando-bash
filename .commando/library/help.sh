@@ -4,7 +4,7 @@
 #
 
 function __help_module {
-  command_help_description='Display help for command or list all commands'
+  command_help_description='Display help for command or list commands'
   command_help_syntax='[command]'
 
   function command_help {
@@ -14,7 +14,7 @@ function __help_module {
 
     # if given a command attempt to display its help
     if [ -n "$command" ]; then
-      help_command ${command}
+      help_display_command_help ${command}
     else
       # otherwise list all commands
       help_list_commands
@@ -24,17 +24,23 @@ function __help_module {
   define_command 'help' command_help
 
   # display help for given command
-  function help_command {
-    local command="$(normalize_command_name $1)"
+  function help_display_command_help {
+    local command="$1"
 
     # ensure command exists
-    resolve_command_fn ${command}
+    set +o nounset
+    local fn="${defined_commands[$command]}"
+    set +o nounset
+
+    if [ -z "$fn" ]; then
+      die "Invalid command: $command"
+    fi
 
     # lookup command attributes
     set +o nounset
-    eval description=\$${command_prefix}${command}_description
-    eval syntax=\$${command_prefix}${command}_syntax
-    eval help=\$${command_prefix}${command}_help
+    eval description=\$${fn}_description
+    eval syntax=\$${fn}_syntax
+    eval help=\$${fn}_help
     set -o nounset
 
     if [ -n "$description" ]; then
@@ -53,7 +59,7 @@ function __help_module {
 
   # display list of all commands
   function help_list_commands {
-    # discover all command functions
+    # lookup all command names
     local commands=${!defined_commands[@]}
 
     # calculate max size of function, and adjust for display
@@ -63,9 +69,11 @@ function __help_module {
 
     printf '\nCommands:\n'
     for command in ${commands}; do
+      local fn="${defined_commands[$command]}"
+
       # lookup command description
       set +o nounset
-      eval description=\$${command_prefix}$(normalize_command_name ${command})_description
+      eval description=\$${fn}_description
       set -o nounset
 
       # $(BOLD) helper messes up printf ability to format

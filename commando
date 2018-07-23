@@ -72,6 +72,7 @@ function __output_helpers {
 
 function __module_system {
   declare -gA loaded_modules
+  declare -gA defined_modules
 
   function load_module {
     local script="$1"
@@ -99,8 +100,6 @@ function __module_system {
     log "Loaded modules: ${!loaded_modules[@]}"
   }
 
-  declare -gA defined_modules
-
   function define_module {
     local fn="$1"
     local library_name="$2"
@@ -120,12 +119,6 @@ function __module_system {
 #
 
 function __command_system {
-  # prefix for all command functions and command function attribute variables
-  command_prefix='command_'
-
-  # current command executing
-  command=''
-
   declare -gA defined_commands
 
   function define_command {
@@ -133,6 +126,7 @@ function __command_system {
     local fn=$2
     log "Define command: $name -> $fn"
 
+    # ensure given function is actually a function
     if [ "$(type -t $fn)" != 'function' ]; then
       die "Invalid command: $name -> $fn"
     fi
@@ -140,33 +134,9 @@ function __command_system {
     defined_commands[$name]="$fn"
   }
 
-  function normalize_command_name {
-    # supports commands with foo-bar and foo_bar style; later is canonical form
-    echo "${1//-/_}"
-  }
-
-  function resolve_command_fn {
-    local command="$(normalize_command_name $1)"
-
-    # optional variable name to store result into
-    set +o nounset
-    local resultvar="$2"
-    set -o nounset
-
-    log "Resolving command: $command"
-
-    local fn="${defined_commands[$command]}"
-
-    # if given, store result as given variable
-    if [ -n "$resultvar" ]; then
-      eval $resultvar=$fn
-    fi
-  }
-
   # run a named command with optional arguments
   function run_command {
-    # not local; exposed as global
-    command="$(normalize_command_name $1)"
+    local command="$1"
     shift
 
     if ${verbose}; then
@@ -177,9 +147,15 @@ function __command_system {
     fi
 
     # resolve command function and run command
-    resolve_command_fn ${command} _command_fn
-    ${_command_fn} "$@"
-    unset _command_fn
+    set +o nounset
+    local fn="${defined_commands[$command]}"
+    set +o nounset
+
+    if [ -z "$fn" ]; then
+      die "Invalid command: $command"
+    fi
+
+    ${fn} "$@"
   }
 }
 
