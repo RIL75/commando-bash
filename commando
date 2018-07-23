@@ -43,8 +43,8 @@ if [ -t 1 ]; then
   if [ -n "$ncolors" -a "$ncolors" -ge 8 ]; then
     font_normal=$(tput sgr0)
     font_bold=$(tput bold)
-    font_underline="$(tput smul)"
-    font_standout="$(tput smso)"
+    font_underline=$(tput smul)
+    font_standout=$(tput smso)
   fi
 fi
 
