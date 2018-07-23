@@ -14,27 +14,7 @@
 set -o errexit
 set -o nounset
 
-function __main {
-  # resolve this script name; ie. 'commando'
-  basename=$(basename $0)
-
-  # determine fully-qualified base directory
-  basedir=$(dirname $0)
-  basedir=$(cd "$basedir" && pwd)
-
-  # if verbose log output is displayed; via -v option
-  verbose='false'
-
-  # prefix for all command functions and command function attribute variables
-  command_prefix='command_'
-
-  # current command executing
-  command=''
-
-  #
-  # Helpers
-  #
-
+function __output_helpers {
   font_bold=''
   font_normal=''
   font_underline=''
@@ -74,27 +54,16 @@ function __main {
   }
 
   # display verbose message if verbose enabled
+  verbose='false'
   function log {
     if [ ${verbose} = 'true' ]; then
       printf "$(BOLD VERBOSE): $*\n" >&2
     fi
   }
+}
 
-  function self {
-    log "Running: $0 $*"
-    $0 "$@"
-  }
-
-  #
-  # Main
-  #
-
-  # compatibility check
-  if [ "$BASH_VERSINFO" != '4' ]; then
-    die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
-  fi
-
-  declare -A loaded_modules
+function __module_system {
+  declare -gA loaded_modules
 
   function load {
     local script="$1"
@@ -133,21 +102,14 @@ function __main {
 
     log "Loaded modules: ${!loaded_modules[@]}"
   }
+}
 
-  # display usage and exit
-  function usage {
-    printf "\nusage: $basename [options] <command> [command-options]
+function __command_system {
+  # prefix for all command functions and command function attribute variables
+  command_prefix='command_'
 
-  options:
-    -h,--help       show usage
-    -v,--verbose    verbose output
-    --              stop processing options
-
-  To see available commands:
-    $(BOLD ${basename} help)\n\n"
-
-    exit 2
-  }
+  # current command executing
+  command=''
 
   function normalize_command_fn {
     # supports commands with foo-bar and foo_bar style; later is canonical form
@@ -194,75 +156,112 @@ function __main {
     ${_command_fn} "$@"
     unset _command_fn
   }
+}
 
-  # bootstrap
-  function main {
-    cd "$basedir"
+function __main {
+  # resolve this script name; ie. 'commando'
+  basename=$(basename $0)
 
-    # parse options and build command-line (command + command-options)
-    local -a command_line
-    for opt in "$@"; do
-      # if break token is found, add all remaining values to command-line
-      if [ "$opt" == '--' ]; then
-        shift
-        for extra in "$@"; do
-          command_line+=("$1")
-          shift
-        done
-        break
-      fi
+  # determine fully-qualified base directory
+  basedir=$(dirname $0)
+  basedir=$(cd "$basedir" && pwd)
 
-      case $opt in
-        -h|--help)
-          usage
-          ;;
-        -v|--verbose)
-          verbose=true
-          shift
-          ;;
-        -*)
-          die "Unknown option: $opt"
-          ;;
-        *)
-          command_line+=("$1")
-          shift
-          ;;
-      esac
-    done
-
-    # check if we have a command-line or not
-    set +o nounset
-    local have_command=false
-    if [ ${#command_line[@]} != 0 ]; then
-      have_command=true
-    fi
-    set -o nounset
-
-    if ${verbose}; then
-      log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
-      log "Base name: $basename"
-      log "Base directory: $basedir"
-
-      # explain command-line
-      if ${have_command}; then
-        log "Command line (${#command_line[@]} arguments)"
-        for arg in ${!command_line[@]}; do
-          log "  '${command_line[$arg]}'"
-        done
-      fi
-    fi
-
-    load_modules
-
-    # display usage if no arguments, else execute command
-    if ${have_command}; then
-      run_command "${command_line[@]}"
-    else
-      usage
-    fi
+  function self {
+    log "Running: $0 $*"
+    $0 "$@"
   }
 
-  main "$@"
+  # display usage and exit
+  function usage {
+    printf "\nusage: $basename [options] <command> [command-options]
+
+  options:
+    -h,--help       show usage
+    -v,--verbose    verbose output
+    --              stop processing options
+
+  To see available commands:
+    $(BOLD ${basename} help)\n\n"
+
+    exit 2
+  }
+
+  #
+  # Bootstrap
+  #
+
+  cd "$basedir"
+  __module_system
+  __command_system
+
+  # parse options and build command-line (command + command-options)
+  local -a command_line
+  for opt in "$@"; do
+    # if break token is found, add all remaining values to command-line
+    if [ "$opt" == '--' ]; then
+      shift
+      for extra in "$@"; do
+        command_line+=("$1")
+        shift
+      done
+      break
+    fi
+
+    case $opt in
+      -h|--help)
+        usage
+        ;;
+      -v|--verbose)
+        verbose=true
+        shift
+        ;;
+      -*)
+        die "Unknown option: $opt"
+        ;;
+      *)
+        command_line+=("$1")
+        shift
+        ;;
+    esac
+  done
+
+  # check if we have a command-line or not
+  set +o nounset
+  local have_command=false
+  if [ ${#command_line[@]} != 0 ]; then
+    have_command=true
+  fi
+  set -o nounset
+
+  if ${verbose}; then
+    log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
+    log "Base name: $basename"
+    log "Base directory: $basedir"
+
+    # explain command-line
+    if ${have_command}; then
+      log "Command line (${#command_line[@]} arguments)"
+      for arg in ${!command_line[@]}; do
+        log "  '${command_line[$arg]}'"
+      done
+    fi
+  fi
+
+  load_modules
+
+  # display usage if no arguments, else execute command
+  if ${have_command}; then
+    run_command "${command_line[@]}"
+  else
+    usage
+  fi
 }
+
+__output_helpers
+
+# compatibility check
+if [ "$BASH_VERSINFO" != '4' ]; then
+  die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
+fi
 
 __main "$@"
