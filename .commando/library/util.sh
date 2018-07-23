@@ -8,7 +8,7 @@ function __util_module {
   function resolve_executable {
     local name="$1"
     local executable="$2"
-    local resultvar="$3"
+    local rvar="$3"
 
     if [ ! -x "$executable" ]; then
       set +o errexit
@@ -17,7 +17,7 @@ function __util_module {
 
       if [ -x "$executable" ]; then
         log "Resolved executable: $name -> $executable"
-        eval $resultvar="$executable"
+        eval $rvar="$executable"
       else
         die "Unable to resolve executable: $name"
       fi
