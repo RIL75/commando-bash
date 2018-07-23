@@ -63,12 +63,12 @@ function __help_module {
     local commands=${!defined_commands[@]}
 
     # calculate max size of function, and adjust for display
-    local names=$(echo ${commands} | tr ' ' '\n' | sort)
-    local max_size=$(echo "$names" | wc --max-line-length)
+    local sorted=$(echo ${commands} | tr ' ' '\n' | sort)
+    local max_size=$(echo "$sorted" | wc --max-line-length)
     local col_size=$(expr ${max_size} + 4)
 
     printf '\nCommands:\n'
-    for command in ${commands}; do
+    for command in ${sorted}; do
       local fn="${defined_commands[$command]}"
 
       # lookup command description
