@@ -17,12 +17,12 @@ function command_rebuild {
 # change_version
 command_change_version_description='Change project version'
 command_change_version_syntax='<version>'
-command_change_version_help="\
+command_change_version_help='\
 $(BOLD CONFIGURATION)
 
-  change_version_artifacts    Initial list of project artifact-ids to change; $(BOLD REQUIRED)
-  change_version_properties   Optional set of properties to change
-"
+  $(UL change_version_artifacts)    Initial list of project artifact-ids to change; $(BOLD REQUIRED)
+  $(UL change_version_properties)   Optional set of properties to change
+'
 
 change_version_artifacts=
 change_version_properties=
@@ -46,17 +46,17 @@ function command_change_version {
 # license_header
 command_license_headers_description='Manage project license headers'
 command_license_headers_syntax='<check|format>'
-command_license_headers_help="\
+command_license_headers_help='\
 $(BOLD CONFIGURATION)
 
-  license_check_options   Options for license check
-  license_format_options  Options for license format
+  $(UL license_check_options)   Options for license check
+  $(UL license_format_options)  Options for license format
 
 $(BOLD HOOKS)
 
-  license_check   Hook called to perform license 'check'
-  license_format  Hook called to perform license 'format'
-"
+  $(UL license_check)   Hook called to perform license 'check'
+  $(UL license_format)  Hook called to perform license 'format'
+'
 
 function command_license_headers {
   set +o nounset

@@ -10,20 +10,20 @@ require project.sh
 # release
 command_release_description='Release project'
 command_release_syntax='<version> <next-version> [options]'
-command_release_help="\
+command_release_help='\
 $(BOLD OPTIONS)
   --dry-run   Do not push or deploy
 
 $(BOLD CONFIGURATION)
 
-  release_prebuild_options  Options for pre-release build
-  release_deploy_options    Options for deploy build
+  $(UL release_prebuild_options)  Options for pre-release build
+  $(UL release_deploy_options)    Options for deploy build
 
 $(BOLD HOOKS)
 
-  release_prebuild  Hook called to perform pre-release build
-  release_deploy    Hook called to perform deploy
-"
+  $(UL release_prebuild)  Hook called to perform pre-release build
+  $(UL release_deploy)    Hook called to perform deploy
+'
 
 function command_release {
   local dryrun='false'

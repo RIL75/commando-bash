@@ -34,11 +34,26 @@ command=''
 # Helpers
 #
 
-font_bold=$(tput bold)
-font_normal=$(tput sgr0)
+font_bold=''
+font_normal=''
+font_underline=''
+font_standout=''
+if [ -t 1 ]; then
+  ncolors=$(tput colors)
+  if [ -n "$ncolors" -a "$ncolors" -ge 8 ]; then
+    font_normal=$(tput sgr0)
+    font_bold=$(tput bold)
+    font_underline="$(tput smul)"
+    font_standout="$(tput smso)"
+  fi
+fi
 
 function BOLD {
   printf "${font_bold}$*${font_normal}"
+}
+
+function UL {
+  printf "${font_underline}$*${font_normal}"
 }
 
 # display fatal message and exit

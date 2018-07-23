@@ -41,8 +41,10 @@ function help_command {
   printf "\n$(BOLD USAGE)\n\n"
   printf "  $basename $command $syntax\n\n"
 
+  # late render help text if its given
   if [ -n "$help" ]; then
-    printf "$help\n"
+    eval "printf \"$help\""
+    printf '\n'
   fi
 }
 
