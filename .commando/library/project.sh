@@ -4,21 +4,31 @@
 #
 
 function __project_module {
+  #
   # rebuild
+  #
+
   __rebuild_command_description='Rebuild project'
 
   rebuild_options='clean install'
 
   function __rebuild_command {
-    mvn ${rebuild_options} $*
+    mvn ${rebuild_options} "$@"
   }
 
   define_command 'rebuild' __rebuild_command
 
-  # change_version
+  #
+  # change-version
+  #
+
   __change_version_command_description='Change project version'
   __change_version_command_syntax='<version>'
   __change_version_command_help='\
+$(BOLD OPTIONS)
+
+  -h,--help   Show usage
+
 $(BOLD CONFIGURATION)
 
   $(UL change_version_artifacts)    Initial list of project artifact-ids to change; $(BOLD REQUIRED)
@@ -44,10 +54,17 @@ $(BOLD CONFIGURATION)
       -DnewVersion=${newVersion}
   }
 
-  # license_header
+  #
+  # license-headers
+  #
+
   __license_headers_command_description='Manage project license headers'
   __license_headers_command_syntax='<check|format>'
   __license_headers_command_help='\
+$(BOLD OPTIONS)
+
+  -h,--help   Show usage
+
 $(BOLD CONFIGURATION)
 
   $(UL license_check_options)   Options for license check
@@ -55,8 +72,8 @@ $(BOLD CONFIGURATION)
 
 $(BOLD HOOKS)
 
-  $(UL license_check)   Hook called to perform license 'check'
-  $(UL license_format)  Hook called to perform license 'format'
+  $(UL license_check)   Hook called to perform license check
+  $(UL license_format)  Hook called to perform license format
 '
 
   define_command 'change-version' __change_version_command

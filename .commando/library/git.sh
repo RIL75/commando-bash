@@ -4,11 +4,11 @@
 #
 
 function __git_module {
-  # default to 'git' on path
-  git_executable=$(which git)
+  git_executable='git'
   git_options=''
 
   function git {
+    resolve_executable 'git' "$git_executable" git_executable
     log "Running: $git_executable $git_options $*"
     "$git_executable" ${git_options} "$@"
   }

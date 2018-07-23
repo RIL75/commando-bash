@@ -4,6 +4,10 @@
 #
 
 function __help_module {
+  #
+  # help
+  #
+
   __help_command_description='Display help for command or list commands'
   __help_command_syntax='[command]'
 
@@ -50,11 +54,18 @@ function __help_module {
     printf "\n$(BOLD USAGE)\n\n"
     printf "  $basename $command $syntax\n\n"
 
-    # late render help text if its given
-    if [ -n "$help" ]; then
-      eval "printf \"$help\""
-      printf '\n'
+    # if no help is present use default
+    if [ -z "$help" ]; then
+      help='\
+$(BOLD OPTIONS)
+
+  -h,--help   Show usage
+'
     fi
+
+    # late render help text
+    eval "printf \"$help\""
+    printf '\n'
   }
 
   # display list of all commands

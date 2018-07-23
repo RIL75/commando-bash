@@ -155,7 +155,45 @@ function __command_system {
       die "Invalid command: $command"
     fi
 
+    # handle default options
+    local -a arguments
+    for opt in "$@"; do
+      case $opt in
+        # give all commands help options
+        -h|--help)
+          run_command help "$command"
+          return
+          ;;
+      esac
+    done
+
     ${fn} "$@"
+  }
+}
+
+#
+# Helpers
+#
+
+function __command_helpers {
+  # resolve an executable
+  function resolve_executable {
+    local name="$1"
+    local executable="$2"
+    local resultvar="$3"
+
+    if [ ! -x "$executable" ]; then
+      set +o errexit
+      executable=$(which ${name})
+      set -o errexit
+
+      if [ -x "$executable" ]; then
+        log "Resolved executable: $name -> $executable"
+        eval $resultvar="$executable"
+      else
+        die "Unable to resolve executable: $name"
+      fi
+    fi
   }
 }
 
@@ -181,9 +219,9 @@ function __main {
     printf "\nusage: $basename [options] <command> [command-options]
 
 options:
-  -h,--help       show usage
-  -v,--verbose    verbose output
-  --              stop processing options
+  -h,--help       Show usage
+  -v,--verbose    Verbose output
+  --              Stop processing options
 
 To see available commands:
   $(BOLD ${basename} help)\n\n"
@@ -194,19 +232,12 @@ To see available commands:
   cd "$basedir"
   __module_system
   __command_system
+  __command_helpers
 
   # parse options and build command-line (command + command-options)
   local -a command_line
   for opt in "$@"; do
-    # if break token is found, add all remaining values to command-line
-    if [ "$opt" == '--' ]; then
-      shift
-      for extra in "$@"; do
-        command_line+=("$1")
-        shift
-      done
-      break
-    fi
+    local consume_remaining=false
 
     case $opt in
       -h|--help)
@@ -219,11 +250,22 @@ To see available commands:
       -*)
         die "Unknown option: $opt"
         ;;
-      *)
-        command_line+=("$1")
+      --)
         shift
+        consume_remaining=true
+        ;;
+      *)
+        consume_remaining=true
         ;;
     esac
+
+    if [ "$consume_remaining" = 'true' ]; then
+      for extra in "$@"; do
+        command_line+=("$1")
+        shift
+      done
+      break
+    fi
   done
 
   # check if we have a command-line or not

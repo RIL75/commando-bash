@@ -4,17 +4,13 @@
 #
 
 function __maven_module {
-  # prefer maven-wrapper if it exist; else default to 'mvn' on path
-  mvn_executable="$basedir/mvnw"
-  if [ ! -x "$mvn_executable" ]; then
-    mvn_executable=$(which mvn)
-  fi
-
+  maven_executable="$basedir/mvnw"
   maven_options=''
 
   function mvn {
-    log "Running: $mvn_executable $maven_options $*"
-    "$mvn_executable" ${maven_options} "$@"
+    resolve_executable 'mvn' "$maven_executable" maven_executable
+    log "Running: $maven_executable $maven_options $*"
+    "$maven_executable" ${maven_options} "$@"
   }
 }
 

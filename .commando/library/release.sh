@@ -4,11 +4,16 @@
 #
 
 function __release_module {
+  #
   # release
+  #
+
   __release_command_description='Release project'
   __release_command_syntax='<version> <next-version> [options]'
   __release_command_help='\
 $(BOLD OPTIONS)
+
+  -h,--help   Show usage
   --dry-run   Do not push or deploy
 
 $(BOLD CONFIGURATION)
