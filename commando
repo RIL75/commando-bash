@@ -146,7 +146,7 @@ function __command_system {
       done
     fi
 
-    # resolve command function and run command
+    # resolve command function
     set +o nounset
     local fn="${defined_commands[$command]}"
     set +o nounset

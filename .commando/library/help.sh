@@ -27,7 +27,7 @@ function __help_module {
   function help_display_command_help {
     local command="$1"
 
-    # ensure command exists
+    # resolve command function
     set +o nounset
     local fn="${defined_commands[$command]}"
     set +o nounset
