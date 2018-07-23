@@ -70,7 +70,7 @@ function __module_system {
     if [ -f "$script" ]; then
       library_name="$(basename $script)"
       log "Load: $library_name -> $script"
-      source "$script"
+      source "$script" "$library_name"
       loaded_modules[$library_name]="$script"
     else
       warn "Missing: $script"
@@ -83,18 +83,13 @@ function __module_system {
   }
 
   function load_modules {
-    # load libraries
-    local library_dir=.${basename}/library
-    if [ -d "$library_dir" ]; then
-      for script in ${library_dir}/*.sh; do
-        load_module "$script"
-      done
-    fi
-
-    # load project and user configuration
-    for script in .${basename}/config.sh ${basename}.rc; do
-      if [ -f "$script" ]; then
-        load_module "$script"
+    for source in "$@"; do
+      if [ -d "$source" ]; then
+        for script in ${source}/*.sh; do
+          load_module "$script"
+        done
+      elif [ -f "$source" ]; then
+        load_module "$source"
       fi
     done
 
@@ -142,10 +137,9 @@ function __command_system {
     shift
 
     if ${verbose}; then
-      log "Command: $command"
-      log "Command arguments (${#@})"
+      log "Command: '$command'; ${#@} arguments"
       for arg in "${@}"; do
-        log "  $arg"
+        log "  '$arg'"
       done
     fi
 
@@ -238,14 +232,14 @@ To see available commands:
 
     # explain command-line
     if ${have_command}; then
-      log "Command line (${#command_line[@]} arguments)"
+      log "Command line; ${#command_line[@]} arguments"
       for arg in ${!command_line[@]}; do
         log "  '${command_line[$arg]}'"
       done
     fi
   fi
 
-  load_modules
+  load_modules ".$basename/library" ".$basename/config.sh" "$basename.rc"
 
   # display usage if no arguments, else execute command
   if ${have_command}; then
