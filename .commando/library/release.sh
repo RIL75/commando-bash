@@ -4,10 +4,6 @@
 #
 
 function __release_module {
-  require_module git.sh
-  require_module maven.sh
-  require_module project.sh
-
   # release
   command_release_description='Release project'
   command_release_syntax='<version> <next-version> [options]'
@@ -104,4 +100,8 @@ $(BOLD HOOKS)
   }
 }
 
-__release_module "$@"
+require_module git.sh
+require_module maven.sh
+require_module project.sh
+
+define_module __release_module "$@"

@@ -94,4 +94,4 @@ function __help_module {
   }
 }
 
-__help_module "$@"
+define_module __help_module "$@"

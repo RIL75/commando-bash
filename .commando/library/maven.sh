@@ -17,4 +17,5 @@ function __maven_module {
     "$mvn_executable" ${maven_options} "$@"
   }
 }
-__maven_module "$@"
+
+define_module __maven_module "$@"

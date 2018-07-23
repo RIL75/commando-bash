@@ -4,8 +4,6 @@
 #
 
 function __project_module {
-  require_module maven.sh
-
   # rebuild
   command_rebuild_description='Rebuild project'
 
@@ -92,4 +90,6 @@ $(BOLD HOOKS)
   }
 }
 
-__project_module "$@"
+require_module maven.sh
+
+define_module __project_module "$@"

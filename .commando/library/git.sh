@@ -14,4 +14,4 @@ function __git_module {
   }
 }
 
-__git_module "$@"
+define_module __git_module "$@"
