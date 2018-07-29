@@ -4,11 +4,11 @@
 #
 # Reads configuration from a few locations:
 #
-# Commands - $basedir/.$basename/commands/*.sh
-# Project  - $basedir/.$basename/config.sh
-# User     - $basedir/$basename.rc
+# Commands - $basedir/.$progname/commands/*.sh
+# Project  - $basedir/.$progname/config.sh
+# User     - $basedir/$progname.rc
 #
-# NOTE: $basename resolves to whatever the name of the commando script is.
+# NOTE: $progname resolves to whatever the name of the commando script is (sans .sh suffix)
 #
 
 set -o errexit
@@ -176,8 +176,9 @@ function __command_system {
 #
 
 function __main {
-  # resolve this script name; ie. 'commando'
+  # resolve this script name
   basename=$(basename $0)
+  progname=$(basename -s .sh ${basename})
 
   # determine fully-qualified base directory
   basedir=$(dirname $0)
@@ -252,6 +253,7 @@ To see available commands:
   if ${verbose}; then
     log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
     log "Base name: $basename"
+    log "Program name: $progname"
     log "Base directory: $basedir"
 
     # explain command-line
@@ -263,7 +265,7 @@ To see available commands:
     fi
   fi
 
-  load_modules ".$basename/library" ".$basename/config.sh" "$basename.rc"
+  load_modules ".$progname/library" ".$progname/config.sh" "$progname.rc"
 
   # display usage if no arguments, else execute command
   if ${have_command}; then
