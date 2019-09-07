@@ -1,4 +1,3 @@
-#@IgnoreInspection BashAddShebang
 #
 # Help system
 #

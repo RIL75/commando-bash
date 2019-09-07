@@ -1,4 +1,3 @@
-#@IgnoreInspection BashAddShebang
 #
 # Project commands
 #

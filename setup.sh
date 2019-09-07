@@ -1,4 +1,3 @@
-#@IgnoreInspection BashAddShebang
 #
 # Commando setup action.
 #

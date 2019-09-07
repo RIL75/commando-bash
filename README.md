@@ -1,8 +1,8 @@
 # Commando - BASH
 
-Bourne Again Shell commando.
+Commando - Bourne Again SHell.
 
-Useful to add configurable commands to a Unix-based project w/o too many dependencies on fancy languages. 
+Add configurable commands to a Unix-based project w/o too many dependencies on fancy languages. 
 
 ## Requires
 
@@ -10,7 +10,8 @@ Useful to add configurable commands to a Unix-based project w/o too many depende
 
 ## Features
 
-* Provides project configuration, user configuration overrides
+* Provides project configuration
+* User configuration overrides
 * Extensible commands
 * Command help system
 
