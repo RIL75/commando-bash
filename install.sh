@@ -6,13 +6,20 @@
 set -o errexit
 set -o nounset
 
+# compatibility check
+if [ "$BASH_VERSINFO" -lt '4' ]; then
+  echo "ERROR: Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
+  exit 2
+fi
+
 #
 # Output
 #
 
 function __output_helpers {
-  font_bold=''
-  font_normal=''
+  declare -g font_bold=''
+  declare -g font_normal=''
+
   if [ -t 1 ]; then
     local ncolors=$(tput colors)
     if [ -n "$ncolors" -a "$ncolors" -ge 8 ]; then
@@ -41,12 +48,32 @@ function __output_helpers {
     printf "$(BOLD WARN): $*\n" >&2
   }
 
-  # display verbose message if verbose enabled
-  verbose='false'
+  # display message
+  function info {
+    printf "$(BOLD INFO): $*\n" >&2
+  }
+
+  # display verbose message if enabled
+  declare -g verbose='false'
   function log {
     if [ ${verbose} = 'true' ]; then
       printf "$(BOLD VERBOSE): $*\n" >&2
     fi
+  }
+
+  # display debug message if enabled
+  declare -g debug='false'
+  function debug {
+    if [ ${debug} = 'true' ]; then
+      printf "$(BOLD DEBUG): $*\n" >&2
+    fi
+  }
+
+  # wrap output of command with snip markers
+  function snip_output {
+    log '----8<----'
+    $@
+    log '---->8----'
   }
 }
 
@@ -56,52 +83,74 @@ function __output_helpers {
 
 function __main {
   # resolve this script name
-  basename=$(basename $0)
+  declare -g basename=$(basename $0)
+
+  # when fetched remotely avoid confusion with detcted basename
+  if [ "$basename" = 'bash' ]; then
+    basename='install.sh'
+  fi
 
   # determine fully-qualified base directory
-  basedir=$(dirname $0)
+  declare -g basedir=$(dirname $0)
   basedir=$(cd "$basedir" && pwd)
+
+  # stable defaults for usage display
+  local default_verbose=${verbose}
+  local default_baseurl='https://github.com/jdillon/commando-bash'
+  local default_version='master'
+
+  # configurable options
+  local baseurl=${default_baseurl}
+  local version=${default_version}
 
   # display usage and exit
   function usage {
-    printf "\nusage: $basename [options]
+    printf "
+Commando Installer
+
+usage: $basename [options]
 
 options:
-  -h,--help       Show usage
-  -v,--verbose    Verbose output
-  --              Stop processing options
+  -h,--help             Show usage
+  -v,--verbose          Enable VERBOSE output; default: ${default_verbose}
+  --version <version>   Select release version; default: ${default_version}
+  --baseurl <url>       Select release base-URL; default: ${default_baseurl}
+  --                    Stop processing options
 \n"
 
     exit 2
   }
 
-  cd "$basedir"
-
-  local baseurl='https://github.com/jdillon/commando-bash'
-  local version='master'
-
   # parse options and collect arguments
   local -a arguments
   for opt in "$@"; do
-    local consume_remaining=false
+    local consume_remaining='false'
 
     case $opt in
       -h|--help)
         usage
         ;;
       -v|--verbose)
-        verbose=true
         shift
+        verbose='true'
+        ;;
+      --baseurl)
+        baseurl="$2"
+        shift 2
+        ;;
+      --version)
+        version="$2"
+        shift 2
         ;;
       -*)
         die "Unknown option: $opt"
         ;;
       --)
         shift
-        consume_remaining=true
+        consume_remaining='true'
         ;;
       *)
-        consume_remaining=true
+        consume_remaining='true'
         ;;
     esac
 
@@ -116,6 +165,7 @@ options:
 
   local disturl="$baseurl/archive/${version}.tar.gz"
   local tmpdir=`mktemp -d`
+  local projectdir=$(pwd)
 
   if ${verbose}; then
     log "Bash: $BASH $BASH_VERSINFO $BASH_VERSION"
@@ -125,31 +175,50 @@ options:
     log "Version: $version"
     log "Distribution URL: $disturl"
     log "Temp directory: $tmpdir"
+    log "Project directory: $projectdir"
+    log "Arguments: ${arguments[@]}"
   fi
 
-  local distfile="$tmpdir/dist.tgz"
-  log "Distribution archive: $distfile"
-  curl --location --silent --output "$distfile" "$disturl"
+  info "Installing"
 
-  local distdir="$tmpdir/dist"
-  log "Distribution directory: $distdir"
-  mkdir "$distdir"
-  tar -xzf "$distfile" -C "$distdir"
+  if [[ ${baseurl} == file:* ]]; then
+    # use local release distribution
+    local releasedir=${baseurl:5}
+    if [ ! -d ${releasedir} ]; then
+      die "Invalid baseurl; not a directory: ${releasedir}"
+    fi
+  else
+    # fetch release distribution
+    local distfile="$tmpdir/dist.tgz"
+    local distdir="$tmpdir/dist"
+    local releasedir="$distdir/commando-bash-$version"
 
-  local releasedir="$distdir/commando-bash-$version"
-  log "Release directory: $releasedir"
+    info "Distribution archive: $distfile"
+    curl --location --silent --output "$distfile" "$disturl"
 
-  if ${verbose}; then
-    log '----8<----'
-    find "$releasedir"
-    log '---->8----'
+    log "Distribution directory: $distdir"
+    mkdir "$distdir"
+    tar -xzf "$distfile" -C "$distdir"
   fi
+
+  info "Release directory: $releasedir"
 
   local setup="$releasedir/setup.sh"
+  if [ ! -f ${setup} ]; then
+    die "Invalid release directory; missing: ${setup}"
+  fi
+
+  if ${verbose}; then
+    snip_output find "$releasedir" -type f ! -path "*/.git*"
+  fi
+
+  info "Setup"
   source "$setup"
-  __setup "$releasedir" "$basedir"
+  __setup "$releasedir" "$projectdir"
 
   rm -rf "$tmpdir"
+
+  info "Done"
 }
 
 #
@@ -157,10 +226,5 @@ options:
 #
 
 __output_helpers
-
-# compatibility check
-if [ "$BASH_VERSINFO" != '4' ]; then
-  die "Incompatible Bash detected: $BASH $BASH_VERSINFO $BASH_VERSION"
-fi
 
 __main "$@"

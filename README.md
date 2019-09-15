@@ -6,7 +6,29 @@ Add configurable commands to a Unix-based project w/o too many dependencies on f
 
 ## Requires
 
-* Bash (version 4)
+* Bash (version 4+)
+
+### Tools
+
+* which
+* find
+* awk
+* tr
+* printf
+* tput
+* basename
+* dirname
+* sort
+* rm
+* mkdir
+* ls
+* expr
+
+### install.sh
+
+* mktemp
+* curl
+* tar
 
 ## Features
 

@@ -3,12 +3,39 @@
 #
 
 function __help_module {
+  require_module util.sh
+
+  declare -gA help_descriptions
+  declare -gA help_syntaxs
+  declare -gA help_docs
+
+  function help_define_description {
+    local command=${1}; shift
+    local description="$*"
+    debug "Define $command help description: $description"
+    help_descriptions[$command]="$description"
+  }
+
+  function help_define_syntax {
+    local command=${1}; shift
+    local syntax="$*"
+    debug "Define $command help syntax: $syntax"
+    help_syntaxs[$command]="$syntax"
+  }
+
+  function help_define_doc {
+    local command=${1}; shift
+    local usage="$*"
+    debug "Define $command help usage: $usage"
+    help_docs[$command]="$usage"
+  }
+
   #
   # help
   #
 
-  __help_command_description='Display help for command or list commands'
-  __help_command_syntax='[command]'
+  help_define_description help 'Display help for command or list commands'
+  help_define_syntax help '[command]'
 
   function __help_command {
     set +o nounset
@@ -33,17 +60,16 @@ function __help_module {
     # resolve command function
     set +o nounset
     local fn="${defined_commands[$command]}"
-    set +o nounset
-
+    set -o nounset
     if [ -z "$fn" ]; then
       die "Invalid command: $command"
     fi
 
     # lookup command attributes
     set +o nounset
-    eval description=\$${fn}_description
-    eval syntax=\$${fn}_syntax
-    eval help=\$${fn}_help
+    local description="${help_descriptions[$command]}"
+    local syntax="${help_syntaxs[$command]}"
+    local usage="${help_docs[$command]}"
     set -o nounset
 
     if [ -n "$description" ]; then
@@ -53,18 +79,23 @@ function __help_module {
     printf "\n$(BOLD USAGE)\n\n"
     printf "  $basename $command $syntax\n\n"
 
-    # if no help is present use default
-    if [ -z "$help" ]; then
-      help='\
+    # if no usage is present use default
+    if [ -z "$usage" ]; then
+      usage='\
 $(BOLD OPTIONS)
 
   -h,--help   Show usage
 '
     fi
 
-    # late render help text
-    eval "printf \"$help\""
+    # late render usagse text
+    eval "printf \"$usage\""
     printf '\n'
+  }
+
+  # determine maximum line-length of input
+  function max_line_length {
+    awk 'length > max_length { max_length = length } END { print max_length }' -
   }
 
   # display list of all commands
@@ -72,18 +103,16 @@ $(BOLD OPTIONS)
     # lookup all command names
     local commands=${!defined_commands[@]}
 
-    # calculate max size of function, and adjust for display
+    # calculate max length of command name, and adjust for display
     local sorted=$(echo ${commands} | tr ' ' '\n' | sort)
-    local max_size=$(echo "$sorted" | wc --max-line-length)
+    local max_size=$(echo "$sorted" | max_line_length)
     local col_size=$(expr ${max_size} + 4)
 
     printf '\nCommands:\n'
     for command in ${sorted}; do
-      local fn="${defined_commands[$command]}"
-
       # lookup command description
       set +o nounset
-      eval description=\$${fn}_description
+      local description="${help_descriptions[$command]}"
       set -o nounset
 
       # $(BOLD) helper messes up printf ability to format

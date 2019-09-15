@@ -3,13 +3,15 @@
 #
 
 function __project_module {
+  require_module maven.sh
+
   #
   # rebuild
   #
 
-  __rebuild_command_description='Rebuild project'
+  help_define_description rebuild 'Rebuild project'
 
-  rebuild_options='clean install'
+  declare -g rebuild_options='clean install'
 
   function __rebuild_command {
     mvn ${rebuild_options} "$@"
@@ -21,9 +23,9 @@ function __project_module {
   # change-version
   #
 
-  __change_version_command_description='Change project version'
-  __change_version_command_syntax='<version>'
-  __change_version_command_help='\
+  help_define_description change-version 'Change project version'
+  help_define_syntax change-version '<version>'
+  help_define_doc change-version '\
 $(BOLD OPTIONS)
 
   -h,--help   Show usage
@@ -34,8 +36,8 @@ $(BOLD CONFIGURATION)
   $(UL change_version_properties)   Optional set of properties to change
 '
 
-  change_version_artifacts=
-  change_version_properties=
+  declare -g change_version_artifacts=
+  declare -g change_version_properties=
 
   function __change_version_command {
     set +o nounset
@@ -53,13 +55,15 @@ $(BOLD CONFIGURATION)
       -DnewVersion=${newVersion}
   }
 
+  define_command 'change-version' __change_version_command
+
   #
   # license-headers
   #
 
-  __license_headers_command_description='Manage project license headers'
-  __license_headers_command_syntax='<check|format>'
-  __license_headers_command_help='\
+  help_define_description license-headers 'Manage project license headers'
+  help_define_syntax license-headers '<check|format>'
+  help_define_doc license-headers '\
 $(BOLD OPTIONS)
 
   -h,--help   Show usage
@@ -74,8 +78,6 @@ $(BOLD HOOKS)
   $(UL license_check)   Hook called to perform license check
   $(UL license_format)  Hook called to perform license format
 '
-
-  define_command 'change-version' __change_version_command
 
   function __license_headers_command {
     set +o nounset
@@ -99,19 +101,17 @@ $(BOLD HOOKS)
 
   define_command 'license-headers' __license_headers_command
 
-  license_check_options='--activate-profiles license-check --non-recursive'
+  declare -g license_check_options='--activate-profiles license-check --non-recursive'
 
   function license_check {
     mvn ${license_check_options} $*
   }
 
-  license_format_options='--activate-profiles license-format --non-recursive'
+  declare -g license_format_options='--activate-profiles license-format --non-recursive'
 
   function license_format {
     mvn ${license_format_options} $*
   }
 }
-
-require_module maven.sh
 
 define_module __project_module "$@"
