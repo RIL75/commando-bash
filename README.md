@@ -45,4 +45,3 @@ From project directory run:
 curl -sSL https://raw.githubusercontent.com/jdillon/commando-bash/master/install.sh | bash -s
 ```
 
-testrow
